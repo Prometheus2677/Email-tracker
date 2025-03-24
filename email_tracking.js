@@ -1,49 +1,33 @@
-var getFormattedDate = function (timestamp) {
-    var date = new Date(timestamp);
-
-    // Format the date to "HH:mm:ss DD/MM/YYYY"
-    var formattedDate = date.toLocaleString("en-GB", { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit', 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric',
-        hour12: false // Use 24-hour format
-    });
-
-    return formattedDate;
-}
-
 function fetchEmailsDaily() {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    var now = new Date();
-    // var estOffset = 5 * 60 * 60 * 1000; // EST is UTC-5 hours
-    // var time1 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() - estOffset;
-    var now = new Date();
-    var year = now.getFullYear();
-    var month = now.getMonth();
-    var date = now.getDate();
-
-    // Create a Date object at 12 AM UTC
-    var utcMidnight = new Date(year, month, date, 0, 0, 0);
-
-    // Convert to Eastern Time (ET)
-    var estTime = new Date(utcMidnight.toLocaleString("en-US", { timeZone: "America/New_York" }));
-
-    // Get timestamp for 12 AM ET
-    var time1 = estTime.getTime();
-    var time2 = now.getTime();
-
-    var query = "newer:" + time2/1000 + " older:"  + time1/1000 + " in:inbox";
     
+    // Define the target date (MM/DD/YYYY format)
+    var targetDate = "02/12/2025"; // Change this to the desired date
+    
+    var [month, day, year] = targetDate.split("/").map(Number);
+    
+    // Create Date objects for 12 PM and 7 PM Eastern Time (ET)
+    var startET = new Date(`${month}/${day}/${year} 12:00:00 GMT-0400`);
+    var endET = new Date(`${month}/${day}/${year} 19:00:00 GMT-0400`);
+
+    // Convert to timestamps in seconds for Gmail search
+    var time1 = Math.floor(startET.getTime() / 1000);
+    var time2 = Math.floor(endET.getTime() / 1000);
+
+    var query = `newer:${time1} older:${time2} in:inbox`;
+
     var threads = GmailApp.search(query);
     var messages = threads.flatMap(thread => thread.getMessages());
 
     if (messages.length === 0) {
-        Logger.log("No new emails found for today.");
+        Logger.log("No new emails found for the specified time range.");
         return;
     }
+
+    var linkedinMsg = messages.filter(msg => 
+        msg.getSubject().toLowerCase().includes("your application was sent to") && 
+        msg.getFrom().toLowerCase().includes("linkedin")
+    );
 
     // Append email details to Google Sheet
     messages.forEach(msg => {
@@ -51,12 +35,8 @@ function fetchEmailsDaily() {
             msg.getDate(),
             msg.getFrom(),
             msg.getSubject(),
-            // msg.getPlainBody().substring(0, 500) // Limiting body size to 500 chars
-            time1,
-            time2,
-            getFormattedDate(time1),
-            getFormattedDate(time2),
-            messages.length
+            messages.length,
+            linkedinMsg.length
         ]);
     });
 
