@@ -1,3 +1,50 @@
+function getEnv(key) {
+    return PropertiesService.getScriptProperties().getProperty(key);
+}
+
+function sendMsgToSlack(payload) {
+    var slackWebhookUrl = getEnv('SLACK_WEBHOOK');
+    UrlFetchApp.fetch(slackWebhookUrl, {
+        method: 'post',
+        contentType: 'application/json',
+        payload: payload
+    });
+}
+
+function checkEmailsAndNotifySlack() {
+    var now = new Date();
+    var time2 = Math.floor(now.getTime() / 1000); // current time in seconds
+    var time1 = time2 - (15 * 60); // 15 minutes ago
+
+    var query = `newer:${time1} older:${time2} category:primary in:inbox is:unread`;
+    var threads = GmailApp.search(query);
+    for (var i = 0; i < threads.length; i++) {
+      var messages = threads[i].getMessages();
+      for (var j = 0; j < messages.length; j++) {
+        // var body = messages[j].getPlainBody();
+        var subject = messages[j].getSubject();
+        var from = messages[j].getFrom();
+
+        var banList = [
+            {from: "jobs-noreply@linkedin.com", subject: "Your application was sent to"},
+            {from: "jobs-noreply@linkedin.com", subject: "Your application to"},
+            {from: "applyonline@dice.com", subject: "application for dice job"},
+        ]
+        var isBanned = banList.some(function(banItem) {
+            return from.includes(banItem.from) && subject.includes(banItem.subject);
+        });
+    
+        if (!isBanned) {
+            var payload = JSON.stringify({
+                text: `From: ${from}\nSubject: ${subject}`
+            });
+    
+            sendMsgToSlack(payload)
+        }
+      }
+    }
+}
+
 function removeDuplicateMessages(messages) {
     let uniqueMessages = [];
     let seen = new Set();
