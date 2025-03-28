@@ -14,7 +14,7 @@ function sendMsgToSlack(payload) {
 function checkEmailsAndNotifySlack() {
     var now = new Date();
     var time2 = Math.floor(now.getTime() / 1000); // current time in seconds
-    var time1 = time2 - (15 * 60); // 15 minutes ago
+    var time1 = time2 - (1 * 60); // 1 minutes ago
 
     var query = `newer:${time1} older:${time2} category:primary in:inbox is:unread`;
     var threads = GmailApp.search(query);
@@ -26,9 +26,12 @@ function checkEmailsAndNotifySlack() {
         var from = messages[j].getFrom();
 
         var banList = [
-            {from: "jobs-noreply@linkedin.com", subject: "Your application was sent to"},
+            {from: "jobs-noreply@linkedin.com", subject: "your application was sent to"},
             {from: "jobs-noreply@linkedin.com", subject: "Your application to"},
-            {from: "applyonline@dice.com", subject: "application for dice job"},
+            {from: "applyonline@dice.com", subject: "Application for Dice Job"},
+            {from: "", subject: "Thank you for applying"},
+            {from: "", subject: "Thanks for applying"},
+            {from: "Indeed Apply <indeedapply@indeed.com>", subject: "Indeed Application:"},
         ]
         var isBanned = banList.some(function(banItem) {
             return from.includes(banItem.from) && subject.includes(banItem.subject);
@@ -36,7 +39,7 @@ function checkEmailsAndNotifySlack() {
     
         if (!isBanned) {
             var payload = JSON.stringify({
-                text: `From: ${from}\nSubject: ${subject}`
+                text: `To: ${Session.getActiveUser().getEmail()}\nFrom: ${from}\nSubject: ${subject}`
             });
     
             sendMsgToSlack(payload)
@@ -106,14 +109,20 @@ function fetchEmailsDaily() {
     for (let i = 0; i < messages.length; i++) {
         let msg = messages[i];
         
-        if ((msg.subject.toLowerCase().includes("your application was sent to") && 
-            msg.sender.toLowerCase().includes("linkedin")) || 
-            (msg.subject.toLowerCase().includes("application for dice job") && 
-            msg.sender.toLowerCase().includes("applyonline@dice.com"))) {
-            easyApply.push(msg);
-            messages.splice(i, 1);
-            i--;
-        }
+        const rules = [
+            { subject: "your application was sent to", sender: "linkedin" },
+            { subject: "application for dice job", sender: "applyonline@dice.com" },
+            { subject: "indeed application:", sender: "indeed apply <indeedapply@indeed.com>" }
+        ];
+        
+        rules.forEach(rule => {
+            if (msg.subject.toLowerCase().includes(rule.subject.toLowerCase()) && 
+                msg.sender.toLowerCase().includes(rule.sender.toLowerCase())) {
+                easyApply.push(msg);
+                messages.splice(i, 1);
+                i--;
+            }
+        });
     }
 
     easyApply.sort((a, b) => a.sender.localeCompare(b.sender) || a.subject.localeCompare(b.subject));
@@ -139,13 +148,34 @@ function fetchEmailsDaily() {
     var lastRow = sheet.getLastRow();
     sheet.getRange(lastRow, 1).setFontWeight("bold").setFontColor("blue");
 
-    messages.forEach(msg => {
-        sheet.appendRow([
-            msg.date,
-            msg.sender,
-            msg.subject
-        ]);
-    });
+    for (var j = 0; j < messages.length; j++) {
+        // var body = messages[j].getPlainBody();
+        var subject = messages[j].subject;
+        var from = messages[j].sender;
+
+        var banList = [
+            {from: "jobs-noreply@linkedin.com", subject: "your application was sent to"},
+            {from: "jobs-noreply@linkedin.com", subject: "Your application to"},
+            {from: "applyonline@dice.com", subject: "Application for Dice Job"},
+            {from: "", subject: "Thank you for applying"},
+            {from: "", subject: "Thanks for applying"},
+            {from: "Indeed Apply <indeedapply@indeed.com>", subject: "Indeed Application:"},
+            {from: "", subject: "be the first to apply!"},
+            {from: "Discord <noreply@discord.com>", subject: ""},
+            {from: "Google <no-reply@accounts.google.com>", subject: "Security alert"},
+        ]
+        var isBanned = banList.some(function(banItem) {
+            return from.includes(banItem.from) && subject.includes(banItem.subject);
+        });
+    
+        if (!isBanned) {
+            sheet.appendRow([
+                messages[j].date,
+                messages[j].sender,
+                messages[j].subject
+            ]);
+        }
+    }
 
     sheet.appendRow([" "]); // Blank line fix
     Logger.log("Emails inserted successfully.");
