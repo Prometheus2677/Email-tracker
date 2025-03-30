@@ -11,6 +11,8 @@ const GLOBAL_BAN_LIST = [
   { from: "Google <no-reply@accounts.google.com>", subject: "Security alert" },
   { from: "", subject: "be the first to apply!" },
   { from: "", subject: "Your job alert for" },
+  { from: "JobLeads <mailer@jobleads.com>", subject: "new jobs match your job search" },
+  { from: "Jooble <subscribe@jooble.org>", subject: "more new jobs" },
   { from: "LinkedIn Job Alerts <jobalerts-noreply@linkedin.com>", subject: "" },
   { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "Apply Now." },
   { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "you would be a great fit!" },
@@ -94,6 +96,7 @@ function checkEmailsAndNotifySlack() {
   const slackBanList = [
     { from: "", subject: "Thank you for applying" },
     { from: "", subject: "Thanks for applying" },
+    { from: "", subject: "Thank you for your application to" },
   ];
   const mergedBanList = getMergedBanList(slackBanList);
 
