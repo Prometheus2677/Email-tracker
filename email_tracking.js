@@ -92,12 +92,32 @@ function categorizeEasyApplyMessages(messages, rules) {
 function logMessagesToSheet(sheet, title, messages, countColumn = false) {
   sheet.appendRow([title]);
   sheet.getRange(sheet.getLastRow(), 1).setFontWeight("bold").setFontColor("blue");
+
+  const startRow = sheet.getLastRow() + 1;
+
   messages.forEach(msg => {
     const row = [msg.date, msg.sender, msg.subject];
     if (countColumn) row.push(messages.length);
     sheet.appendRow(row);
+    sheet.getRange(sheet.getLastRow(), 1).setFontWeight("normal").setFontColor("black");
   });
-  sheet.appendRow([""]); // Spacer
+
+  const endRow = sheet.getLastRow();
+
+  if (title === "Manual") {
+    const sumFormula = `=SUM(D${startRow}:D${endRow})`;
+    const sumRow = ["", "", "Total:", sumFormula];
+    sheet.appendRow(sumRow);
+    sheet.getRange(sheet.getLastRow(), 3, 1, 2).setFontWeight("bold");
+  }
+  sheet.appendRow([" "]); // Spacer
+}
+
+function isWeekend(dateStr) {
+  const [month, day, year] = dateStr.split("/").map(Number);
+  const date = new Date(year, month - 1, day); // month is 0-based in JS
+  const dayOfWeek = date.getDay();
+  return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
 }
 
 function checkEmailsAndNotifySlack() {
@@ -135,6 +155,12 @@ function fetchEmailsDaily() {
   const today = new Date();
   // const targetDate = "03/27/2025"; // or dynamically generate
   const targetDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+
+  if (isWeekend(targetDate)) {
+    Logger.log("It's a weekend!");
+    return;
+  }
+
   const [month, day, year] = targetDate.split("/").map(Number);
 
   const startET = new Date(`${month}/${day}/${year} 12:00:00 GMT-0400`);
