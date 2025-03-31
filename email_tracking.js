@@ -5,6 +5,7 @@ const GLOBAL_BAN_LIST = [
   { from: "jobs-noreply@linkedin.com", subject: "your application was sent to" },
   { from: "jobs-noreply@linkedin.com", subject: "Your application to" },
   { from: "LinkedIn <jobs-noreply@linkedin.com>", subject: "Your application was viewed by" },
+  { from: "LinkedIn Job Alerts <jobalerts-noreply@linkedin.com>", subject: "" },
   { from: "applyonline@dice.com", subject: "Application for Dice Job" },
   { from: "Indeed Apply <indeedapply@indeed.com>", subject: "Indeed Application:" },
   { from: "Discord <noreply@discord.com>", subject: "" },
@@ -12,10 +13,21 @@ const GLOBAL_BAN_LIST = [
   { from: "", subject: "be the first to apply!" },
   { from: "", subject: "Your job alert for" },
   { from: "JobLeads <mailer@jobleads.com>", subject: "new jobs match your job search" },
+  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "You could be a great fit with" },
+  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "is hiring and more new" },
+  { from: "UKG Notifications <noreply@notifications.ultipro.com>", subject: "You have a new password" },
   { from: "Jooble <subscribe@jooble.org>", subject: "more new jobs" },
-  { from: "LinkedIn Job Alerts <jobalerts-noreply@linkedin.com>", subject: "" },
   { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "Apply Now." },
   { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "you would be a great fit!" },
+  { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "job search going?" },
+  { from: "Glassdoor <noreply@glassdoor.com>", subject: "This week's employee reviews and more" },
+  { from: "Jooble <subscribe@jooble.org>", subject: "more new jobs" },
+  { from: "<updates@pmail.jobcase.com>", subject: "has open roles that may interest you" },
+  { from: "Lensa Aggregated <aggregated@lensa.com>", subject: "jobs open" },
+  { from: "JobLeads <mailer@jobleads.com>", subject: "new jobs match your job search" },
+  // { from: "", subject: "" },
+  { from: `Proofreader (via JH)" <jobs@pmail.jobhat.com>`, subject: "Apply now." },
+  { from: "<updates@pmail.jobcase.com>", subject: "has open roles that may interest you" },
   { from: "ZipRecruiter <alerts@ziprecruiter.com>", subject: "Today's jobs chosen for you" },
   { from: "", subject: "Your account has been created" },
   { from: Session.getActiveUser().getEmail(), subject: "" },
@@ -53,10 +65,11 @@ function removeDuplicateMessages(messages) {
 }
 
 function fetchMessagesFromThreads(threads) {
-  return threads.flatMap(thread => thread.getMessages()).map(msg => ({
-    date: msg.getDate(),
-    sender: msg.getFrom(),
-    subject: msg.getSubject(),
+  return threads.flatMap(thread => thread.getMessages()).map(message => ({
+    date: message.getDate(),
+    sender: message.getFrom(),
+    subject: message.getSubject(),
+    gmailMessage: message
   }));
 }
 
@@ -111,6 +124,8 @@ function checkEmailsAndNotifySlack() {
         text: `To: ${Session.getActiveUser().getEmail()}\nFrom: ${message.sender}\nSubject: ${message.subject}`
       });
       sendMsgToSlack(payload);
+    } else {
+      message.gmailMessage.markRead();
     }
   });
 }
