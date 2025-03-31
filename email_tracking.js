@@ -7,7 +7,9 @@ const GLOBAL_BAN_LIST = [
   { from: "LinkedIn <jobs-noreply@linkedin.com>", subject: "Your application was viewed by" },
   { from: "LinkedIn Job Alerts <jobalerts-noreply@linkedin.com>", subject: "" },
   { from: "applyonline@dice.com", subject: "Application for Dice Job" },
+  { from: "Dice <dice@connect.dice.com>", subject: "and other open positions!" },
   { from: "Indeed Apply <indeedapply@indeed.com>", subject: "Indeed Application:" },
+  { from: "Indeed <donotreply@match.indeed.com>", subject: "more new job" },
   { from: "Discord <noreply@discord.com>", subject: "" },
   { from: "Google <no-reply@accounts.google.com>", subject: "Security alert" },
   { from: "", subject: "be the first to apply!" },
@@ -15,6 +17,8 @@ const GLOBAL_BAN_LIST = [
   { from: "JobLeads <mailer@jobleads.com>", subject: "new jobs match your job search" },
   { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "You could be a great fit with" },
   { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "is hiring and more new" },
+  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "is looking for" },
+  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "vacancies for you" },
   { from: "UKG Notifications <noreply@notifications.ultipro.com>", subject: "You have a new password" },
   { from: "Jooble <subscribe@jooble.org>", subject: "more new jobs" },
   { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "Apply Now." },
@@ -169,7 +173,10 @@ function fetchEmailsDaily() {
   const time2 = Math.floor(endET.getTime() / 1000);
   const query = `newer:${time1} older:${time2} category:primary in:inbox`;
 
-  const spreadsheetBanList = [];
+  const spreadsheetBanList = [
+    { from: "<messaging-digest-noreply@linkedin.com>", subject: "just messaged you" },
+    // { from: "", subject: "" },
+  ];
   const mergedBanList = getMergedBanList(spreadsheetBanList);
 
   const easyApplyRules = [
