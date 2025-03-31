@@ -127,7 +127,7 @@ function isWeekend(dateStr) {
 function checkEmailsAndNotifySlack() {
   const now = new Date();
   const time2 = Math.floor(now.getTime() / 1000);
-  const time1 = time2 - 60;
+  const time1 = time2 - 70;
   const query = `newer:${time1} older:${time2} category:primary in:inbox is:unread`;
 
   const slackBanList = [
