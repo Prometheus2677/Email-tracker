@@ -2,47 +2,68 @@
  * Centralized constants and reusable utilities for email filtering and processing
  */
 const GLOBAL_BAN_LIST = [
-  { from: "jobs-noreply@linkedin.com", subject: "your application was sent to" },
-  { from: "jobs-noreply@linkedin.com", subject: "Your application to" },
-  { from: "LinkedIn <jobs-noreply@linkedin.com>", subject: "Your application was viewed by" },
-  { from: "LinkedIn Job Alerts <jobalerts-noreply@linkedin.com>", subject: "" },
-  { from: "applyonline@dice.com", subject: "Application for Dice Job" },
-  { from: "Dice <dice@connect.dice.com>", subject: "and other open positions!" },
-  { from: "Indeed Apply <indeedapply@indeed.com>", subject: "Indeed Application:" },
-  { from: "Indeed <donotreply@match.indeed.com>", subject: "more new job" },
-  { from: "Discord <noreply@discord.com>", subject: "" },
-  { from: "Google <no-reply@accounts.google.com>", subject: "Security alert" },
-  { from: "", subject: "be the first to apply!" },
-  { from: "", subject: "Your job alert for" },
-  { from: "JobLeads <mailer@jobleads.com>", subject: "new jobs match your job search" },
-  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "You could be a great fit with" },
-  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "is hiring and more new" },
-  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "is looking for" },
-  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "vacancies for you" },
-  { from: "UKG Notifications <noreply@notifications.ultipro.com>", subject: "You have a new password" },
-  { from: "Jooble <subscribe@jooble.org>", subject: "more new jobs" },
-  { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "Apply Now." },
-  { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "you would be a great fit!" },
-  { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "job search going?" },
-  { from: "Glassdoor <noreply@glassdoor.com>", subject: "This week's employee reviews and more" },
-  { from: "Jooble <subscribe@jooble.org>", subject: "more new jobs" },
-  { from: "<updates@pmail.jobcase.com>", subject: "has open roles that may interest you" },
-  { from: "Lensa Aggregated <aggregated@lensa.com>", subject: "jobs open" },
-  { from: "JobLeads <mailer@jobleads.com>", subject: "new jobs match your job search" },
-  // { from: "", subject: "" },
-  { from: `Proofreader (via JH)" <jobs@pmail.jobhat.com>`, subject: "Apply now." },
-  { from: "<updates@pmail.jobcase.com>", subject: "has open roles that may interest you" },
-  { from: "ZipRecruiter <alerts@ziprecruiter.com>", subject: "Today's jobs chosen for you" },
-  { from: "", subject: "Your account has been created" },
-  { from: Session.getActiveUser().getEmail(), subject: "" },
+  { from: "jobs-noreply@linkedin.com", subject: "your application was sent to", plainBody: "" },
+  { from: "jobs-noreply@linkedin.com", subject: "Your application to", plainBody: "" },
+  { from: "LinkedIn <jobs-noreply@linkedin.com>", subject: "Your application was viewed by", plainBody: "" },
+  { from: "LinkedIn Job Alerts <jobalerts-noreply@linkedin.com>", subject: "", plainBody: "" },
+  { from: "LinkedIn <jobs-noreply@linkedin.com>", subject: "you have new application updates this week", plainBody: "" },
+  { from: "applyonline@dice.com", subject: "Application for Dice Job", plainBody: "" },
+  { from: "Dice <dice@connect.dice.com>", subject: "and other open positions!", plainBody: "" },
+  { from: "Dice <dice@connect.dice.com>", subject: "Your IntelliSearch Alert:", plainBody: "" },
+  { from: "Indeed Apply <indeedapply@indeed.com>", subject: "Indeed Application:", plainBody: "" },
+  { from: "Indeed <donotreply@match.indeed.com>", subject: "more new job", plainBody: "" },
+  { from: "Discord <noreply@discord.com>", subject: "", plainBody: "" },
+  { from: "Google <no-reply@accounts.google.com>", subject: "Security alert", plainBody: "" },
+  { from: "", subject: "be the first to apply!", plainBody: "" },
+  { from: "<newsletters-noreply@linkedin.com>", subject: "", plainBody: "" },
+  { from: "", subject: "Your job alert for", plainBody: "" },
+  { from: "JobLeads <mailer@jobleads.com>", subject: "new jobs match your job search", plainBody: "" },
+  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "You could be a great fit with", plainBody: "" },
+  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "is hiring and more new", plainBody: "" },
+  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "is looking for", plainBody: "" },
+  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "are looking for", plainBody: "" },
+  { from: "Amy at Adzuna <no-reply@adzuna.com>", subject: "vacancies for you", plainBody: "" },
+  { from: "UKG Notifications <noreply@notifications.ultipro.com>", subject: "You have a new password", plainBody: "" },
+  { from: "Jooble <subscribe@jooble.org>", subject: "more new jobs", plainBody: "" },
+  { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "Apply Now.", plainBody: "" },
+  { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "you would be a great fit!", plainBody: "" },
+  { from: "Glassdoor Jobs <noreply@glassdoor.com>", subject: "job search going?", plainBody: "" },
+  { from: "Glassdoor <noreply@glassdoor.com>", subject: "This week's employee reviews and more", plainBody: "" },
+  { from: "Jooble <subscribe@jooble.org>", subject: "more new jobs", plainBody: "" },
+  { from: "<updates@pmail.jobcase.com>", subject: "has open roles that may interest you", plainBody: "" },
+  { from: "Lensa Aggregated <aggregated@lensa.com>", subject: "jobs open", plainBody: "" },
+  { from: "<lensa24@lensa.com>", subject: "Be the first to apply to", plainBody: "" },
+  { from: "<lensa24@lensa.com>", subject: "jobs posted in the last 24 hours", plainBody: "" },
+  { from: "JobLeads <mailer@jobleads.com>", subject: "new jobs match your job search", plainBody: "" },
+  { from: "", subject: "has been successfully submitted", plainBody: "" },
+  { from: "<team@hi.wellfound.com>", subject: "new jobs you'd be a great fit for", plainBody: "" },
+  { from: "<updates@pmail.jobcase.com>", subject: "and other job searches for you", plainBody: "" },
+  { from: "<eric.beck@email.jobleads.com>", subject: "matches your personal job search", plainBody: "" },
+  { from: "<noreply@message.get.it>", subject: "Job Matches @ Get.It", plainBody: "" },
+  { from: "<jobs@umail.texasjobdepartment.com>", subject: "Apply now.", plainBody: "" },
+  { from: "<yashvant.t@highbrow-tech.com>", subject: "Job Opportunity :", plainBody: "" },
+  { from: "", subject: "", plainBody: "unfortunately we have decided not to consider you further for this position." },
+  { from: " <alerts@ziprecruiter.com>", subject: "has an open position", plainBody: "" },
+  { from: "", subject: "Job Opportunity", plainBody: "" },
+  { from: "episerveri-jobnotification@noreply55.jobs2web.com", subject: "New jobs posted from careers.optimizely.com", plainBody: "" },
+  { from: "", subject: "(ONSITE)", plainBody: "" },
+  { from: "<donotreply@job-announcements.com>", subject: "New positions at", plainBody: "" },
+  { from: "", subject: "", plainBody: "we have decided to move forward with candidates whose qualifications more closely meet our needs at this time." },
+  // { from: "", subject: "", plainBody: "" },
+  { from: `Proofreader (via JH)" <jobs@pmail.jobhat.com>`, subject: "Apply now.", plainBody: "" },
+  { from: "<updates@pmail.jobcase.com>", subject: "has open roles that may interest you", plainBody: "" },
+  { from: "ZipRecruiter <alerts@ziprecruiter.com>", subject: "Today's jobs chosen for you", plainBody: "" },
+  { from: "", subject: "Your account has been created", plainBody: "" },
+  { from: "", subject: "", plainBody: "After careful consideration, we have decided not to move forward with your application." },
+  { from: Session.getActiveUser().getEmail(), subject: "", plainBody: "" },
 ];
 
 function getMergedBanList(localList = []) {
   return [...GLOBAL_BAN_LIST, ...localList];
 }
 
-function isBannedEmail(from, subject, mergedList) {
-  return mergedList.some(ban => from.includes(ban.from) && subject.includes(ban.subject));
+function isBannedEmail(from, subject, plainBody, mergedList) {
+  return mergedList.some(ban => from.includes(ban.from) && subject.includes(ban.subject) && plainBody.includes(ban.plainBody));
 }
 
 function getEnv(key) {
@@ -73,6 +94,7 @@ function fetchMessagesFromThreads(threads) {
     date: message.getDate(),
     sender: message.getFrom(),
     subject: message.getSubject(),
+    plainBody: message.getPlainBody(),
     gmailMessage: message
   }));
 }
@@ -99,9 +121,18 @@ function logMessagesToSheet(sheet, title, messages, countColumn = false) {
 
   const startRow = sheet.getLastRow() + 1;
 
+  const manualList = [
+    { from: "", subject: "Thank you for applying", plainBody: "" },
+    { from: "", subject: "Thanks for applying", plainBody: "" },
+    { from: "", subject: "Thank you for your application to", plainBody: "" },
+  ];
+
   messages.forEach(msg => {
     const row = [msg.date, msg.sender, msg.subject];
     if (countColumn) row.push(messages.length);
+    if (title === "Manual" && manualList.some(ban => msg.sender.includes(ban.from) && msg.subject.includes(ban.subject) && msg.plainBody.includes(ban.plainBody))) {
+      row.push(1)
+    }
     sheet.appendRow(row);
     sheet.getRange(sheet.getLastRow(), 1).setFontWeight("normal").setFontColor("black");
   });
@@ -127,13 +158,13 @@ function isWeekend(dateStr) {
 function checkEmailsAndNotifySlack() {
   const now = new Date();
   const time2 = Math.floor(now.getTime() / 1000);
-  const time1 = time2 - 70;
+  const time1 = time2 - 62;
   const query = `newer:${time1} older:${time2} category:primary in:inbox is:unread`;
 
   const slackBanList = [
-    { from: "", subject: "Thank you for applying" },
-    { from: "", subject: "Thanks for applying" },
-    { from: "", subject: "Thank you for your application to" },
+    { from: "", subject: "Thank you for applying", plainBody: "" },
+    { from: "", subject: "Thanks for applying", plainBody: "" },
+    { from: "", subject: "Thank you for your application to", plainBody: "" },
   ];
   const mergedBanList = getMergedBanList(slackBanList);
 
@@ -143,7 +174,7 @@ function checkEmailsAndNotifySlack() {
   let messages = removeDuplicateMessages(fetchMessagesFromThreads(threads));
 
   messages.forEach(message => {
-    if (!isBannedEmail(message.sender, message.subject, mergedBanList)) {
+    if (!isBannedEmail(message.sender, message.subject, message.plainBody, mergedBanList)) {
       const payload = JSON.stringify({
         text: `To: ${Session.getActiveUser().getEmail()}\nFrom: ${message.sender}\nSubject: ${message.subject}`
       });
@@ -167,15 +198,16 @@ function fetchEmailsDaily() {
 
   const [month, day, year] = targetDate.split("/").map(Number);
 
-  const startET = new Date(`${month}/${day}/${year} 12:00:00 GMT-0400`);
-  const endET = new Date(`${month}/${day}/${year} 19:00:00 GMT-0400`);
+  const startET = new Date(`${month}/${day}/${year} 00:00:00 GMT-0400`);
+  const endET = new Date(`${month}/${day}/${year} 23:59:59 GMT-0400`);
   const time1 = Math.floor(startET.getTime() / 1000);
   const time2 = Math.floor(endET.getTime() / 1000);
   const query = `newer:${time1} older:${time2} category:primary in:inbox`;
 
   const spreadsheetBanList = [
-    { from: "<messaging-digest-noreply@linkedin.com>", subject: "just messaged you" },
-    // { from: "", subject: "" },
+    { from: "<messaging-digest-noreply@linkedin.com>", subject: "just messaged you", plainBody: "" },
+    { from: "", subject: "Invitation from an unknown sender: Interview with Prompt", plainBody: "" },
+    // { from: "", subject: "", plainBody: "" },
   ];
   const mergedBanList = getMergedBanList(spreadsheetBanList);
 
@@ -193,7 +225,7 @@ function fetchEmailsDaily() {
   const { easyApply, remaining } = categorizeEasyApplyMessages(messages, easyApplyRules);
 
   logMessagesToSheet(sheet, "Easy", easyApply, true);
-  logMessagesToSheet(sheet, "Manual", remaining.filter(msg => !isBannedEmail(msg.sender, msg.subject, mergedBanList)));
+  logMessagesToSheet(sheet, "Manual", remaining.filter(msg => !isBannedEmail(msg.sender, msg.subject, msg.plainBody, mergedBanList)));
 
   Logger.log("Emails successfully processed and recorded.");
 }
