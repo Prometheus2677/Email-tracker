@@ -128,7 +128,8 @@ function isWeekend(dateStr) {
 function checkEmailsAndNotifySlack() {
   const now = new Date();
   const time2 = Math.floor(now.getTime() / 1000);
-  const time1 = time2 - 62;
+  const offset = 1;
+  const time1 = time2 - 60 - offset;
   const query = `newer:${time1} older:${time2} category:primary in:inbox is:unread`;
 
   const slackBanList = getPublicSheetData("slack");
@@ -164,8 +165,9 @@ function fetchEmailsDaily() {
 
   const [month, day, year] = targetDate.split("/").map(Number);
 
-  const startET = new Date(`${month}/${day}/${year} 00:00:00 GMT-0400`);
-  const endET = new Date(`${month}/${day}/${year} 23:59:59 GMT-0400`);
+  const endET = new Date(`${month}/${day}/${year} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()} GMT-0400`);
+  const startET = new Date(endET.getTime() - 22 * 60 * 60 * 1000);
+
   const time1 = Math.floor(startET.getTime() / 1000);
   const time2 = Math.floor(endET.getTime() / 1000);
   const query = `newer:${time1} older:${time2} category:primary in:inbox`;
