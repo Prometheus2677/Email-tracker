@@ -133,7 +133,9 @@ function checkEmailsAndNotifySlack() {
   const query = `newer:${time1} older:${time2} category:primary in:inbox is:unread`;
 
   const slackBanList = getPublicSheetData("slack");
-  const mergedBanList = getMergedBanList(slackBanList);
+  const manualList = getPublicSheetData("manual");
+  let mergedBanList = getMergedBanList(slackBanList);
+  mergedBanList = [...mergedBanList, ...manualList];
 
   const threads = GmailApp.search(query);
   if (!threads.length) return Logger.log("No new emails found.");
