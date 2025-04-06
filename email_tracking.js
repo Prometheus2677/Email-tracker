@@ -168,7 +168,7 @@ function fetchEmailsDaily() {
   const [month, day, year] = targetDate.split("/").map(Number);
 
   const endET = new Date(`${month}/${day}/${year} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()} GMT-0400`);
-  const startET = new Date(endET.getTime() - 22 * 60 * 60 * 1000);
+  const startET = new Date(endET.getTime() - 20 * 60 * 60 * 1000);
 
   const time1 = Math.floor(startET.getTime() / 1000);
   const time2 = Math.floor(endET.getTime() / 1000);
