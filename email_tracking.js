@@ -68,7 +68,7 @@ function fetchMessagesFromThreads(threads) {
     date: message.getDate(),
     from: message.getFrom(),
     subject: message.getSubject(),
-    plainBody: message.getPlainBody(),
+    plainBody: message.getPlainBody().replace(/\n/g, ''),
     gmailMessage: message
   }));
 }
@@ -79,8 +79,8 @@ function categorizeEasyApplyMessages(messages, rules) {
 
   for (const msg of messages) {
     const matched = rules.some(rule =>
-      msg.subject.toLowerCase().includes(rule.subject) &&
-      msg.from.toLowerCase().includes(rule.from)
+      msg.subject.toLowerCase().includes(rule.subject.toLowerCase()) &&
+      msg.from.toLowerCase().includes(rule.from.toLowerCase())
     );
     if (matched) easyApply.push(msg);
     else remaining.push(msg);
@@ -100,7 +100,7 @@ function logMessagesToSheet(sheet, title, messages, countColumn = false) {
   messages.forEach(msg => {
     const row = [msg.date, msg.from, msg.subject];
     if (countColumn) row.push(messages.length);
-    if (title === "Manual" && manualList.some(ban => msg.from.includes(ban.from) && msg.subject.includes(ban.subject) && msg.plainBody.includes(ban.plainBody))) {
+    if (title === "Manual" && manualList.some(rule => msg.from.includes(rule.from) && msg.subject.includes(rule.subject) && msg.plainBody.includes(rule.plainBody))) {
       row.push(1)
     }
     sheet.appendRow(row);
