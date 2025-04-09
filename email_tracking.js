@@ -32,12 +32,35 @@ let GLOBAL_BAN_LIST = [
 
 GLOBAL_BAN_LIST = GLOBAL_BAN_LIST.concat(getPublicSheetData("global"));
 
+function exportSheetToFolder() {
+  const sheetFile = SpreadsheetApp.getActiveSpreadsheet();
+  const folderId = getEnv('FOLDER_ID'); // <-- Replace with your folder ID
+  const folder = DriveApp.getFolderById(folderId);
+
+  // Define export format: "application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", etc.
+  const exportMime = MimeType.PDF; // or MimeType.MICROSOFT_EXCEL
+
+  const url = `https://www.googleapis.com/drive/v3/files/${sheetFile.getId()}/export?mimeType=${encodeURIComponent(exportMime)}`;
+
+  const token = ScriptApp.getOAuthToken();
+
+  const response = UrlFetchApp.fetch(url, {
+    headers: {
+      Authorization: 'Bearer ' + token,
+    },
+    muteHttpExceptions: true,
+  });
+
+  // Create file in the target folder
+  folder.createFile(response.getBlob()).setName(sheetFile.getName() + '_exported');
+}
+
 function getMergedBanList(localList = []) {
   return [...GLOBAL_BAN_LIST, ...localList];
 }
 
 function isBannedEmail(from, subject, plainBody, mergedList) {
-  return mergedList.some(ban => from.includes(ban.from) && subject.includes(ban.subject) && plainBody.includes(ban.plainBody));
+  return mergedList.some(ban => from.toLowerCase().includes(ban.from.toLowerCase()) && subject.toLowerCase().includes(ban.subject.toLowerCase()) && plainBody.toLowerCase().includes(ban.plainBody.toLowerCase()));
 }
 
 function getEnv(key) {
@@ -100,7 +123,7 @@ function logMessagesToSheet(sheet, title, messages, countColumn = false) {
   messages.forEach(msg => {
     const row = [msg.date, msg.from, msg.subject];
     if (countColumn) row.push(messages.length);
-    if (title === "Manual" && manualList.some(rule => msg.from.includes(rule.from) && msg.subject.includes(rule.subject) && msg.plainBody.includes(rule.plainBody))) {
+    if (title === "Manual" && manualList.some(rule => msg.from.toLowerCase().includes(rule.from.toLowerCase()) && msg.subject.toLowerCase().includes(rule.subject.toLowerCase()) && msg.plainBody.toLowerCase().includes(rule.plainBody.toLowerCase()))) {
       row.push(1)
     }
     sheet.appendRow(row);
