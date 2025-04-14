@@ -175,8 +175,27 @@ function checkEmailsAndNotifySlack() {
   });
 }
 
-function fetchEmailsDaily() {
+function fetchEmailsByQuery(query) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const spreadsheetBanList = getPublicSheetData("spreadsheet")
+  const mergedBanList = getMergedBanList(spreadsheetBanList);
+
+  const easyApplyRules = getPublicSheetData("easy");
+
+  const threads = GmailApp.search(query);
+  if (!threads.length) return Logger.log("No new emails found.");
+
+  let messages = removeDuplicateMessages(fetchMessagesFromThreads(threads));
+
+  const { easyApply, remaining } = categorizeEasyApplyMessages(messages, easyApplyRules);
+
+  logMessagesToSheet(sheet, "Easy", easyApply, true);
+  logMessagesToSheet(sheet, "Manual", remaining.filter(msg => !isBannedEmail(msg.from, msg.subject, msg.plainBody, mergedBanList)));
+
+  Logger.log("Emails successfully processed and recorded.");
+}
+
+function fetchEmailsDaily() {
   const today = new Date();
   // const targetDate = "03/27/2025"; // or dynamically generate
   const targetDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
@@ -194,21 +213,25 @@ function fetchEmailsDaily() {
   const time1 = Math.floor(startET.getTime() / 1000);
   const time2 = Math.floor(endET.getTime() / 1000);
   const query = `newer:${time1} older:${time2} category:primary in:inbox`;
+  fetchEmailsByQuery(query);
+}
 
-  const spreadsheetBanList = getPublicSheetData("spreadsheet")
-  const mergedBanList = getMergedBanList(spreadsheetBanList);
+function fetchEmailsForCertainDay() {
+  const today = new Date();
+  const targetDate = "03/27/2025"; // or dynamically generate
 
-  const easyApplyRules = getPublicSheetData("easy");
+  if (isWeekend(targetDate)) {
+    Logger.log("It's a weekend!");
+    return;
+  }
 
-  const threads = GmailApp.search(query);
-  if (!threads.length) return Logger.log("No new emails found.");
+  const [month, day, year] = targetDate.split("/").map(Number);
 
-  let messages = removeDuplicateMessages(fetchMessagesFromThreads(threads));
+  const endET = new Date(`${month}/${day}/${year} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()} GMT-0400`);
+  const startET = new Date(endET.getTime() - 20 * 60 * 60 * 1000);
 
-  const { easyApply, remaining } = categorizeEasyApplyMessages(messages, easyApplyRules);
-
-  logMessagesToSheet(sheet, "Easy", easyApply, true);
-  logMessagesToSheet(sheet, "Manual", remaining.filter(msg => !isBannedEmail(msg.from, msg.subject, msg.plainBody, mergedBanList)));
-
-  Logger.log("Emails successfully processed and recorded.");
+  const time1 = Math.floor(startET.getTime() / 1000);
+  const time2 = Math.floor(endET.getTime() / 1000);
+  const query = `newer:${time1} older:${time2} category:primary in:inbox`;
+  fetchEmailsByQuery(query);
 }
