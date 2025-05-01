@@ -175,8 +175,28 @@ function checkEmailsAndNotifySlack() {
   });
 }
 
-function fetchEmailsByQuery(query) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+function fetchEmailsByQuery(query, targetDate) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  // Use provided targetDate or default to today
+  let dateObj;
+  if (targetDate && typeof targetDate === 'string') {
+    const [month, day, year] = targetDate.split('/').map(Number);
+    dateObj = new Date(year, month-1, day);
+  } else {
+    dateObj = new Date();
+  }
+  
+  const sheetName = `${dateObj.getMonth()+1}-${dateObj.getDate()}-${dateObj.getFullYear()}`;
+  
+  // Create sheet with date if it doesn't exist
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    Logger.log(`Created new sheet: ${sheetName}`);
+  } else {
+    sheet = ss.getSheetByName(sheetName);
+  }
   const spreadsheetBanList = getPublicSheetData("spreadsheet")
   const mergedBanList = getMergedBanList(spreadsheetBanList);
 
@@ -232,5 +252,5 @@ function fetchEmailsForCertainDay() {
   const time1 = Math.floor(startET.getTime() / 1000);
   const time2 = Math.floor(endET.getTime() / 1000);
   const query = `newer:${time1} older:${time2} category:primary in:inbox`;
-  fetchEmailsByQuery(query);
+  fetchEmailsByQuery(query, targetDate);
 }
