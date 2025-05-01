@@ -32,12 +32,35 @@ let GLOBAL_BAN_LIST = [
 
 GLOBAL_BAN_LIST = GLOBAL_BAN_LIST.concat(getPublicSheetData("global"));
 
+function exportSheetToFolder() {
+  const sheetFile = SpreadsheetApp.getActiveSpreadsheet();
+  const folderId = getEnv('FOLDER_ID'); // <-- Replace with your folder ID
+  const folder = DriveApp.getFolderById(folderId);
+
+  // Define export format: "application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", etc.
+  const exportMime = MimeType.PDF; // or MimeType.MICROSOFT_EXCEL
+
+  const url = `https://www.googleapis.com/drive/v3/files/${sheetFile.getId()}/export?mimeType=${encodeURIComponent(exportMime)}`;
+
+  const token = ScriptApp.getOAuthToken();
+
+  const response = UrlFetchApp.fetch(url, {
+    headers: {
+      Authorization: 'Bearer ' + token,
+    },
+    muteHttpExceptions: true,
+  });
+
+  // Create file in the target folder
+  folder.createFile(response.getBlob()).setName(sheetFile.getName() + '_exported');
+}
+
 function getMergedBanList(localList = []) {
   return [...GLOBAL_BAN_LIST, ...localList];
 }
 
 function isBannedEmail(from, subject, plainBody, mergedList) {
-  return mergedList.some(ban => from.includes(ban.from) && subject.includes(ban.subject) && plainBody.includes(ban.plainBody));
+  return mergedList.some(ban => from.toLowerCase().includes(ban.from.toLowerCase()) && subject.toLowerCase().includes(ban.subject.toLowerCase()) && plainBody.toLowerCase().includes(ban.plainBody.toLowerCase()));
 }
 
 function getEnv(key) {
@@ -68,7 +91,7 @@ function fetchMessagesFromThreads(threads) {
     date: message.getDate(),
     from: message.getFrom(),
     subject: message.getSubject(),
-    plainBody: message.getPlainBody(),
+    plainBody: message.getPlainBody().replace(/\n/g, ''),
     gmailMessage: message
   }));
 }
@@ -79,8 +102,8 @@ function categorizeEasyApplyMessages(messages, rules) {
 
   for (const msg of messages) {
     const matched = rules.some(rule =>
-      msg.subject.toLowerCase().includes(rule.subject) &&
-      msg.from.toLowerCase().includes(rule.from)
+      msg.subject.toLowerCase().includes(rule.subject.toLowerCase()) &&
+      msg.from.toLowerCase().includes(rule.from.toLowerCase())
     );
     if (matched) easyApply.push(msg);
     else remaining.push(msg);
@@ -100,7 +123,7 @@ function logMessagesToSheet(sheet, title, messages, countColumn = false) {
   messages.forEach(msg => {
     const row = [msg.date, msg.from, msg.subject];
     if (countColumn) row.push(messages.length);
-    if (title === "Manual" && manualList.some(ban => msg.from.includes(ban.from) && msg.subject.includes(ban.subject) && msg.plainBody.includes(ban.plainBody))) {
+    if (title === "Manual" && manualList.some(rule => msg.from.toLowerCase().includes(rule.from.toLowerCase()) && msg.subject.toLowerCase().includes(rule.subject.toLowerCase()) && msg.plainBody.toLowerCase().includes(rule.plainBody.toLowerCase()))) {
       row.push(1)
     }
     sheet.appendRow(row);
@@ -133,9 +156,7 @@ function checkEmailsAndNotifySlack() {
   const query = `newer:${time1} older:${time2} category:primary in:inbox is:unread`;
 
   const slackBanList = getPublicSheetData("slack");
-  const manualList = getPublicSheetData("manual");
-  let mergedBanList = getMergedBanList(slackBanList);
-  mergedBanList = [...mergedBanList, ...manualList];
+  const mergedBanList = getMergedBanList(slackBanList);
 
   const threads = GmailApp.search(query);
   if (!threads.length) return Logger.log("No new emails found.");
@@ -154,26 +175,8 @@ function checkEmailsAndNotifySlack() {
   });
 }
 
-function fetchEmailsDaily() {
+function fetchEmailsByQuery(query) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const today = new Date();
-  // const targetDate = "03/27/2025"; // or dynamically generate
-  const targetDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
-
-  if (isWeekend(targetDate)) {
-    Logger.log("It's a weekend!");
-    return;
-  }
-
-  const [month, day, year] = targetDate.split("/").map(Number);
-
-  const endET = new Date(`${month}/${day}/${year} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()} GMT-0400`);
-  const startET = new Date(endET.getTime() - 20 * 60 * 60 * 1000);
-
-  const time1 = Math.floor(startET.getTime() / 1000);
-  const time2 = Math.floor(endET.getTime() / 1000);
-  const query = `newer:${time1} older:${time2} category:primary in:inbox`;
-
   const spreadsheetBanList = getPublicSheetData("spreadsheet")
   const mergedBanList = getMergedBanList(spreadsheetBanList);
 
@@ -190,4 +193,44 @@ function fetchEmailsDaily() {
   logMessagesToSheet(sheet, "Manual", remaining.filter(msg => !isBannedEmail(msg.from, msg.subject, msg.plainBody, mergedBanList)));
 
   Logger.log("Emails successfully processed and recorded.");
+}
+
+function fetchEmailsDaily() {
+  const today = new Date();
+  const targetDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+
+  if (isWeekend(targetDate)) {
+    Logger.log("It's a weekend!");
+    return;
+  }
+
+  const [month, day, year] = targetDate.split("/").map(Number);
+
+  const endET = new Date(`${month}/${day}/${year} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()} GMT-0400`);
+  const startET = new Date(endET.getTime() - 20 * 60 * 60 * 1000);
+
+  const time1 = Math.floor(startET.getTime() / 1000);
+  const time2 = Math.floor(endET.getTime() / 1000);
+  const query = `newer:${time1} older:${time2} category:primary in:inbox`;
+  fetchEmailsByQuery(query);
+}
+
+function fetchEmailsForCertainDay() {
+  const today = new Date();
+  const targetDate = "04/30/2025"; // or dynamically generate
+
+  if (isWeekend(targetDate)) {
+    Logger.log("It's a weekend!");
+    return;
+  }
+
+  const [month, day, year] = targetDate.split("/").map(Number);
+
+  const endET = new Date(`${month}/${day}/${year} 18:${today.getMinutes()}:${today.getSeconds()} GMT-0400`);
+  const startET = new Date(endET.getTime() - 20 * 60 * 60 * 1000);
+
+  const time1 = Math.floor(startET.getTime() / 1000);
+  const time2 = Math.floor(endET.getTime() / 1000);
+  const query = `newer:${time1} older:${time2} category:primary in:inbox`;
+  fetchEmailsByQuery(query);
 }
