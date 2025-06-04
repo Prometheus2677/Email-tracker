@@ -185,6 +185,29 @@ function checkEmailsAndNotifySlack() {
   });
 }
 
+function removeSheetsOlderThan(daysAgo) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const thresholdDate = new Date();
+  thresholdDate.setDate(thresholdDate.getDate() - daysAgo);
+
+  const sheets = ss.getSheets();
+  for (let sheet of sheets) {
+    const name = sheet.getName();
+
+    // Check if name matches expected format: MM-DD-YYYY
+    const match = name.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+    if (match) {
+      const [_, month, day, year] = match;
+      const sheetDate = new Date(year, month - 1, day);
+
+      if (sheetDate < thresholdDate) {
+        ss.deleteSheet(sheet);
+        Logger.log(`Deleted old sheet: ${name}`);
+      }
+    }
+  }
+}
+
 function fetchEmailsByQuery(query, targetDate) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   
@@ -198,6 +221,8 @@ function fetchEmailsByQuery(query, targetDate) {
     dateObj = new Date();
     targetDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
   }
+
+  removeSheetsOlderThan(5);
 
   const sheetName = `${dateObj.getMonth() + 1}-${dateObj.getDate()}-${dateObj.getFullYear()}`;
   let sheet = ss.getSheetByName(sheetName);
