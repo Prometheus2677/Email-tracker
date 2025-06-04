@@ -1,0 +1,42 @@
+name: Tag Master on PR Open
+
+on:
+  pull_request:
+    types: [opened]
+    branches:
+      - master
+
+permissions:
+  contents: write
+  
+jobs:
+  tag-master:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master branch
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          fetch-depth: 0  # needed to create/push tags
+
+      - name: Extract Jira ticket from branch name
+        id: extract
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          # Extract first match like GLP-1234 from branch name
+          if [[ "$BRANCH_NAME" =~ (GLP-[0-9]+) ]]; then
+            echo "jira_id=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+          else
+            echo "jira_id=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set Git identity to PR author
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+
+      - name: Create and push tag
+        run: |
+          TAG_NAME="pre-deploy-${{ steps.extract.outputs.jira_id }}"
+          git tag "$TAG_NAME"
+          git push origin "$TAG_NAME"

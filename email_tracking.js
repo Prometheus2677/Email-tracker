@@ -163,6 +163,16 @@ function checkEmailsAndNotifySlack() {
 
   let messages = removeDuplicateMessages(fetchMessagesFromThreads(threads));
 
+  // Delete messages from newsletters-noreply@linkedin.com
+  messages = messages.filter(msg => {
+    if (msg.from.toLowerCase().includes("newsletters-noreply@linkedin.com") || msg.from.toLowerCase().includes("linkedin news")) {
+      msg.gmailMessage.moveToTrash();
+      Logger.log(`Deleted email from: ${msg.from}`);
+      return false;
+    }
+    return true;
+  });
+
   messages.forEach(message => {
     if (!isBannedEmail(message.from, message.subject, message.plainBody, mergedBanList)) {
       const payload = JSON.stringify({
@@ -180,16 +190,16 @@ function fetchEmailsByQuery(query, targetDate) {
   
   // Use provided targetDate or default to today
   let dateObj;
+  let month, day, year;
   if (targetDate && typeof targetDate === 'string') {
-    const [month, day, year] = targetDate.split('/').map(Number);
-    dateObj = new Date(year, month-1, day);
+    [month, day, year] = targetDate.split('/').map(Number);
+    dateObj = new Date(year, month - 1, day);
   } else {
     dateObj = new Date();
+    targetDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
   }
-  
-  const sheetName = `${dateObj.getMonth()+1}-${dateObj.getDate()}-${dateObj.getFullYear()}`;
-  
-  // Create sheet with date if it doesn't exist
+
+  const sheetName = `${dateObj.getMonth() + 1}-${dateObj.getDate()}-${dateObj.getFullYear()}`;
   let sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
@@ -197,9 +207,8 @@ function fetchEmailsByQuery(query, targetDate) {
   } else {
     sheet = ss.getSheetByName(sheetName);
   }
-  const spreadsheetBanList = getPublicSheetData("spreadsheet")
+  const spreadsheetBanList = getPublicSheetData("spreadsheet");
   const mergedBanList = getMergedBanList(spreadsheetBanList);
-
   const easyApplyRules = getPublicSheetData("easy");
 
   const threads = GmailApp.search(query);
@@ -207,10 +216,19 @@ function fetchEmailsByQuery(query, targetDate) {
 
   let messages = removeDuplicateMessages(fetchMessagesFromThreads(threads));
 
+  // Filter out messages not matching the target date
+  messages = messages.filter(msg => {
+    const msgDate = new Date(msg.date);
+    const msgDateStr = `${msgDate.getMonth() + 1}/${msgDate.getDate()}/${msgDate.getFullYear()}`;
+    return msgDateStr === [month, day, year].join("/");
+  });
+
   const { easyApply, remaining } = categorizeEasyApplyMessages(messages, easyApplyRules);
 
   logMessagesToSheet(sheet, "Easy", easyApply, true);
-  logMessagesToSheet(sheet, "Manual", remaining.filter(msg => !isBannedEmail(msg.from, msg.subject, msg.plainBody, mergedBanList)));
+  logMessagesToSheet(sheet, "Manual", remaining.filter(msg =>
+    !isBannedEmail(msg.from, msg.subject, msg.plainBody, mergedBanList)
+  ));
 
   Logger.log("Emails successfully processed and recorded.");
 }
@@ -237,7 +255,7 @@ function fetchEmailsDaily() {
 
 function fetchEmailsForCertainDay() {
   const today = new Date();
-  const targetDate = "04/30/2025"; // or dynamically generate
+  const targetDate = "05/26/2025"; // or dynamically generate
 
   if (isWeekend(targetDate)) {
     Logger.log("It's a weekend!");
@@ -246,7 +264,7 @@ function fetchEmailsForCertainDay() {
 
   const [month, day, year] = targetDate.split("/").map(Number);
 
-  const endET = new Date(`${month}/${day}/${year} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()} GMT-0400`);
+  const endET = new Date(`${month}/${day}/${year} 19:${today.getMinutes()}:${today.getSeconds()} GMT-0400`);
   const startET = new Date(endET.getTime() - 20 * 60 * 60 * 1000);
 
   const time1 = Math.floor(startET.getTime() / 1000);
